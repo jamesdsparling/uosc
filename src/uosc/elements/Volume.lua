@@ -26,7 +26,7 @@ function VolumeSlider:get_visibility() return Elements.volume:get_visibility(sel
 function VolumeSlider:set_volume(volume)
 	volume = round(volume / options.volume_step) * options.volume_step
 	if state.volume == volume then return end
-	mp.commandv('set', 'volume', clamp(0, volume, state.volume_max))
+	mp.commandv('set', options.volume_property, clamp(0, volume, state.volume_max))
 end
 
 function VolumeSlider:set_from_cursor()
@@ -253,7 +253,7 @@ function Volume:render()
 	-- Reset volume on secondary click
 	cursor:zone('secondary_click', self, function()
 		mp.set_property_native('mute', false)
-		mp.set_property_native('volume', 100)
+		mp.set_property_native(options.volume_property, 100)
 	end)
 
 	-- Mute button

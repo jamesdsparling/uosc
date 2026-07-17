@@ -41,6 +41,7 @@ defaults = {
 	volume_persistency = '',
 	volume_border = 1,
 	volume_step = 1,
+	volume_property = 'volume',
 
 	speed_persistency = '',
 	speed_step = 0.1,
@@ -390,8 +391,8 @@ state = {
 	fullormaxed = mp.get_property_native('fullscreen') or mp.get_property_native('window-maximized'),
 	render_timer = nil,
 	render_last_time = 0,
-	volume = mp.get_property_native('volume'),
-	volume_max = mp.get_property_native('volume-max'),
+	volume = math.max(0, mp.get_property_native(options.volume_property) or 0),
+	volume_max = options.volume_property == 'volume' and mp.get_property_native('volume-max') or 100,
 	mute = nil,
 	type = nil, -- video,image,audio
 	is_idle = false,
@@ -724,8 +725,14 @@ mp.observe_property('idle-active', 'bool', function(_, idle)
 	mp.commandv('script-message-to', 'thumbfast', 'clear')
 end)
 mp.observe_property('pause', 'bool', create_state_setter('pause', function() file_end_timer:kill() end))
-mp.observe_property('volume', 'number', create_state_setter('volume'))
-mp.observe_property('volume-max', 'number', create_state_setter('volume_max'))
+local function update_volume(_, value)
+	set_state('volume', (type(value) == 'number' and value >= 0) and value or 0)
+	request_render()
+end
+mp.observe_property(options.volume_property, 'number', update_volume)
+if options.volume_property == 'volume' then
+	mp.observe_property('volume-max', 'number', create_state_setter('volume_max'))
+end
 mp.observe_property('mute', 'bool', create_state_setter('mute'))
 mp.observe_property('osd-dimensions', 'native', function(name, val)
 	update_display_dimensions()
